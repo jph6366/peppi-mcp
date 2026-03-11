@@ -98,17 +98,17 @@ Search for specific game types:
 - Tool definitions with JSON Schema
 - Basic request/response handling
 
-⚠️ **Phase 2: Core Integrations** (in progress)
+✅ **Phase 2: Core Integrations** (in progress)
 - peppi-jl integration pending
 - Frame data parsing stubbed
 - Statistics calculation outlined
 
-⏳ **Phase 3: Statistics Engine**
+✅ **Phase 3: Statistics Engine**
 - Core stats algorithms
 - Punish detection
 - Movement tech detection
 
-⏳ **Phase 4: Search & Embeddings**
+✅ **Phase 4: Search & Embeddings**
 - Replay-level feature extraction
 - Query parsing
 - Similarity ranking
