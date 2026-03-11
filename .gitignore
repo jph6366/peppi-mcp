@@ -1,0 +1,29 @@
+# Julia
+Manifest.toml
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+/deps/deps.jl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+/build/
+/dist/
+
+# Index cache
+.peppi-mcp/
+index/
+
+# Test files
+test_replays/
+*.slp
+
+# OS
+.DS_Store
+Thumbs.db

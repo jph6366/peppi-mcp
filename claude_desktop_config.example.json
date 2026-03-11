@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "peppi-mcp": {
+      "command": "julia",
+      "args": [
+        "--project=/ABSOLUTE/PATH/TO/peppi-mcp",
+        "/ABSOLUTE/PATH/TO/peppi-mcp/bin/peppi-mcp.jl"
+      ],
+      "env": {
+        "PEPPI_MCP_INDEX_DIR": "~/.peppi-mcp/index"
+      }
+    }
+  }
+}
