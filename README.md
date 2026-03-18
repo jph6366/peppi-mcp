@@ -100,8 +100,6 @@ Search for specific game types:
 
 ✅ **Search & Embeddings** — `embeddings.jl` + `search.jl`: feature extraction and cosine similarity ranking
 
-⏳ **Distribution** — Yggdrasil `build_tarballs.jl` for peppi, package registration
-
 ## Architecture
 
 ```
