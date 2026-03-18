@@ -13,7 +13,7 @@ Outputs:
 
 using PeppiMCP
 
-const REPLAY_DIR = joinpath(@__DIR__, "test", "data")
+const REPLAY_DIR = joinpath(@__DIR__, "test", "sample")
 
 # ── 1. Parse all replays ──────────────────────────────────────────────────────
 

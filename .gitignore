@@ -22,7 +22,7 @@ index/
 
 # Test files
 test_replays/
-*.slp
+/test/replays/*.slp
 
 # OS
 .DS_Store

@@ -24,7 +24,9 @@ A Model Context Protocol (MCP) server that provides LLM clients with tools to an
 ### Prerequisites
 
 - Julia 1.9 or later
-- peppi-jl (integration pending - see spec)
+- Rust toolchain (installed automatically via `RustToolChain.jl`)
+
+The server auto-installs `peppi-slp` from source on startup via `cargo install`.
 
 ### Setup
 
@@ -54,10 +56,7 @@ Add to your `~/Library/Application Support/Claude/claude_desktop_config.json` (m
       "args": [
         "--project=/path/to/peppi-mcp",
         "/path/to/peppi-mcp/bin/peppi-mcp.jl"
-      ],
-      "env": {
-        "PEPPI_MCP_INDEX_DIR": "~/.peppi-mcp/index"
-      }
+      ]
     }
   }
 }
@@ -93,38 +92,29 @@ Search for specific game types:
 
 ## Implementation Status
 
-✅ **Phase 1: MCP Server Skeleton**
-- JSON-RPC 2.0 stdio transport
-- Tool definitions with JSON Schema
-- Basic request/response handling
+✅ **MCP Server** — `ModelContextProtocol.jl`-based server with stdio transport, `generate_stats` and `search_replays` tools
 
-⚠️ **Phase 2: Core Integrations** (in progress)
-- peppi-jl integration pending
-- Frame data parsing stubbed
-- Statistics calculation outlined
+✅ **Replay Parsing** — `.slp` and `.slpp` file support via `PeppiJlrs` (Rust/Julia FFI)
 
-⏳ **Phase 3: Statistics Engine**
-- Core stats algorithms
-- Punish detection
-- Movement tech detection
+✅ **Statistics Engine** — `stats.jl`: stocks, damage, punish metrics, movement tech
 
-⏳ **Phase 4: Search & Embeddings**
-- Replay-level feature extraction
-- Query parsing
-- Similarity ranking
+✅ **Search & Embeddings** — `embeddings.jl` + `search.jl`: feature extraction and cosine similarity ranking
 
-⏳ **Phase 5: Distribution**
-- Yggdrasil build_tarballs.jl for peppi
-- Package registration
+⏳ **Distribution** — Yggdrasil `build_tarballs.jl` for peppi, package registration
 
 ## Architecture
 
 ```
 peppi-mcp/
 ├── Project.toml          # Julia package manifest
+├── peppi/
+│   ├── parse.jl          # Low-level Rust FFI bindings (PeppiJlrs)
+│   └── game.jl           # Game, Frame, Player type definitions
 ├── src/
-│   ├── PeppiMCP.jl       # Main module, MCP server, JSON-RPC handling
-│   ├── parsing.jl        # peppi-jl wrapper, .slp → GameData
+│   ├── PeppiMCP.jl       # Main module: MCP server, tool handlers, replay readers
+│   ├── Internal.jl       # Internal utilities
+│   ├── action_states.jl  # Melee action state definitions
+│   ├── parsing.jl        # High-level .slp/.slpp parsing helpers
 │   ├── stats.jl          # Statistics calculation
 │   ├── embeddings.jl     # Replay-level feature vectors
 │   └── search.jl         # Semantic search implementation
@@ -140,17 +130,13 @@ peppi-mcp/
 julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
-### Testing the Server Manually
+### Starting the Server
 
 ```bash
 julia --project=. bin/peppi-mcp.jl
 ```
 
-Then send JSON-RPC requests via stdin:
-```json
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
-{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
-```
+The server speaks the MCP protocol over stdio and is managed by `ModelContextProtocol.jl`.
 
 ## References
 
