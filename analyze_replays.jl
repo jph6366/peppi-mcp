@@ -13,7 +13,7 @@ Outputs:
 
 using PeppiMCP
 
-const REPLAY_DIR = joinpath(@__DIR__, "test", "sample")
+const REPLAY_DIR = joinpath(@__DIR__, "test", "replays")
 
 # ── 1. Parse all replays ──────────────────────────────────────────────────────
 
@@ -21,9 +21,9 @@ println("Scanning $REPLAY_DIR ...")
 files = PeppiMCP.scan_directory(REPLAY_DIR)
 println("Found $(length(files)) replay files.\n")
 
-games = map(files) do f
+games = filter(!isnothing, map(files) do f
     PeppiMCP.parse_replay(f)
-end
+end)
 println("Successfully parsed $(length(games)) replays.\n")
 
 # ── 2. Discover players ───────────────────────────────────────────────────────

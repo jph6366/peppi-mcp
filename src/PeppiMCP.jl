@@ -95,7 +95,8 @@ function read_slippi(path::String; skip_frames::Bool=false)::Game
     g = _read_slippi(path, Int8(skip_frames))
 
     start_json = JSON.parse(get_start(g))
-    stop_json = JSON.parse(get_end(g))
+    end_str = get_end(g)
+    stop_json = isempty(end_str) ? Dict() : JSON.parse(end_str)
     metadata = JSON.parse(get_metadata(g))
 
     game_start = dc_from_json(GameStart, start_json)
@@ -136,7 +137,8 @@ function read_peppi(path::String; skip_frames::Bool=false)::Game
     g = _read_peppi(path, Int8(skip_frames))
 
     start_json = JSON.parse(get_start(g))
-    end_json = JSON.parse(get_end(g))
+    end_str = get_end(g)
+    end_json = isempty(end_str) ? Dict() : JSON.parse(end_str)
     metadata = JSON.parse(get_metadata(g))
 
     game_start = dc_from_json(GameStart, start_json)

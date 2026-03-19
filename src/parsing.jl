@@ -71,7 +71,6 @@ function GameMetadata(d::Dict, gs::GameStart, ge::GameStop)
             end
         end
     end
-
     return GameMetadata(
         stage = string(gs.stage), # Or a mapping function to get stage name "Final Destination"
         stage_id = gs.stage,
@@ -95,6 +94,61 @@ struct GameData
 end
 
 """
+    has_game_end_event(path::String) -> Bool
+
+Scan a .slp file's raw event stream for the GameEnd event (0x39).
+peppi_jlrs panics with UnexpectedEOF when this event is missing (in-progress
+or aborted games), so we must check before calling into Rust.
+"""
+function has_game_end_event(path::String)::Bool
+    try
+        open(path, "r") do io
+            # UBJSON header: { U 3 "raw" [ $ U # l <int32 big-endian>
+            header = read(io, 15)
+            length(header) < 15 && return false
+            header[1] == 0x7B || return false  # must start with '{'
+
+            raw_size = (Int(header[12]) << 24) | (Int(header[13]) << 16) |
+                       (Int(header[14]) << 8)  | Int(header[15])
+
+            # First event must be Event Payloads (0x35)
+            read(io, 1)[1] == 0x35 || return false
+
+            payload_sz = Int(read(io, 1)[1])  # includes itself
+            num_entries = (payload_sz - 1) ÷ 3
+
+            event_sizes = Dict{UInt8,Int}()
+            for _ in 1:num_entries
+                code  = read(io, 1)[1]
+                hi    = Int(read(io, 1)[1])
+                lo    = Int(read(io, 1)[1])
+                event_sizes[code] = (hi << 8) | lo
+            end
+
+            GAME_END = UInt8(0x39)
+            haskey(event_sizes, GAME_END) || return false
+
+            # Walk the event stream
+            bytes_read = 1 + payload_sz  # Event Payloads event consumed
+            while bytes_read < raw_size
+                code_arr = read(io, 1)
+                isempty(code_arr) && return false
+                code = code_arr[1]
+                bytes_read += 1
+                code == GAME_END && return true
+                sz = get(event_sizes, code, nothing)
+                sz === nothing && return false  # unknown event
+                skip(io, sz)
+                bytes_read += sz
+            end
+            return false
+        end
+    catch
+        return false
+    end
+end
+
+"""
     parse_replay(path::String) -> GameData
 
 Parse a .slp file and return structured game data using peppi_jlrs.
@@ -103,10 +157,14 @@ function parse_replay(path::String)::Union{GameData,Nothing}
     if !isfile(path)
         return nothing
     end
+    if !has_game_end_event(path)
+        @warn "Skipping in-progress/aborted replay (no GameEnd event): $(basename(path))"
+        return nothing
+    end
     try
         game = read_slippi(path)
         metadata = extract_metadata(game)
-        return GameData(path, metadata, game.frames, game)
+        GameData(path, metadata, game.frames, game)
     catch e
         @error "Failed to parse replay: $path" exception=(e, catch_backtrace())
         return nothing
@@ -178,8 +236,9 @@ function extract_metadata(game::Game)::GameMetadata
 
     # Determine winner from game end data (players is nothing when game ended unresolved)
     winner = nothing
-    if game.stop.players !== nothing
-        for player_end in game.stop.players
+    stop = game.stop
+    if stop.players !== nothing
+        for player_end in stop.players
             if player_end.placement == 0
                 winner = Int(player_end.port)
                 break
